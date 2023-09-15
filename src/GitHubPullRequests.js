@@ -22,7 +22,7 @@ const GitHubPullRequests = (props) => {
             Accept: 'application/vnd.github.v3+json',
           },
           params: {
-            state: 'all',
+            state: 'open',
           },
         });
 
