@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 
-const GitHubPullRequests = (props) => {
+const GitHubPullRequestsMergedToday = (props) => {
   const [pullRequests, setPullRequests] = useState({});
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(localStorage.getItem('githubAccessToken') || '');
@@ -16,18 +16,9 @@ const GitHubPullRequests = (props) => {
 
   const fetchData = async () => {
     try {
-      // Check token validity by making a request with it
-      const response = await axios.get(`https://api.github.com/user`, {
-        headers: {
-          Authorization: `token ${accessToken}`,
-        },
-      });
-
-      if (response.status !== 200) {
-        throw new Error('Invalid GitHub Access Token');
-      }
-
       const prData = {};
+      const today = new Date().toISOString().split('T')[0];
+      
       for (const repoName of repoNames) {
         const response = await axios.get(`https://api.github.com/repos/${organization}/${repoName}/pulls`, {
           headers: {
@@ -35,11 +26,17 @@ const GitHubPullRequests = (props) => {
             Accept: 'application/vnd.github.v3+json',
           },
           params: {
-            state: 'open',
+            state: 'closed',
+            sort: 'updated',
+            direction: 'desc',
+            per_page: 100,
           },
         });
 
-        const filteredPRs = response.data.filter((pr) => selectedUsernames.includes(pr.user.login));
+        const filteredPRs = response.data.filter((pr) => 
+          selectedUsernames.includes(pr.user.login) &&
+          pr.merged_at && pr.merged_at.split('T')[0] === today
+        );
         prData[repoName] = filteredPRs;
       }
       setPullRequests(prData);
@@ -51,8 +48,7 @@ const GitHubPullRequests = (props) => {
       setPullRequests({});
       setLoading(true);
       setAllRequestsComplete(true);
-      // Handle invalid token error here, e.g., display an error message to the user
-      setError(error.message);
+      setError(error.message); // Handle invalid token error here, e.g., display an error message to the user
     }
   };
 
@@ -77,7 +73,7 @@ const GitHubPullRequests = (props) => {
 
   return (
     <Container>
-      <Title>Portal Team - P&C Github Open Pull Requests</Title>
+      <Title>Portal Team - P&C Github Open Pull Requests Merged Today</Title>
       <InputContainer>
         <InputLabel>Enter GitHub Access Token:</InputLabel>
         <Input
@@ -88,8 +84,8 @@ const GitHubPullRequests = (props) => {
         <SubmitButton onClick={handleSubmit}>Submit</SubmitButton>
         <RefreshButton onClick={handleRefresh}>Refresh</RefreshButton>
       </InputContainer>
-      {error ? ( // Display error message if there is an error
-        <ErrorMessage>Please Provide Valid Access Token</ErrorMessage>
+      {error ? (        
+      <ErrorMessage>Please Provide Valid Access Token</ErrorMessage>
       ) : loading && !allRequestsComplete ? (
         <LoadingMessage>Loading...</LoadingMessage>
       ) : (
@@ -119,14 +115,12 @@ const GitHubPullRequests = (props) => {
 };
 
 
-export default GitHubPullRequests;
+export default GitHubPullRequestsMergedToday;
 
 const ErrorMessage = styled.p`
   font-size: 16px;
   color: red; // Customize the error message color
 `;
-
-
 const RepoSection = styled.div`
   margin-top: 20px;
   border: 1px solid #ddd;

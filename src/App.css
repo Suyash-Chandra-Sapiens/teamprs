@@ -12,6 +12,28 @@
     animation: App-logo-spin infinite 20s linear;
   }
 }
+/* App.css */
+
+/* Style the select element */
+select {
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Style the options within the dropdown */
+select option {
+  background-color: #fff;
+  color: #333;
+}
+
+/* Style the container div if needed */
+.tab-switcher {
+  margin-bottom: 20px;
+}
 
 .App-header {
   background-color: #282c34;
