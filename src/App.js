@@ -16,11 +16,11 @@ function App() {
       <p>Supported repos: {data.repoNames.join(', ')}</p>
       <div className="tab-switcher">
         <select value={activeTab} onChange={handleTabChange}>
-          <option value="all">All Open PRs</option>
-          <option value="today">All Merged Pr's Today</option>
+          <option value="openPr">All Open PRs</option>
+          <option value="closedPr">All Merged Pr's</option>
         </select>
       </div>
-      {activeTab === 'all' ? (
+      {activeTab === 'openPr' ? (
         <GitHubPullRequests
           repoNames={data.repoNames}
           organization={data.organization}
