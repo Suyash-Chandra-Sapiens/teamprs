@@ -3,7 +3,8 @@
         "sapiens-digital-portal",
         "sapiens-digital-portal-ace",
         "sapiens-digital-pnc-ace5",
-        "sapiens-napcip-ace5"
+        "sapiens-napcip-ace5",
+        "sapiens-snap-ace5"
     ],
     "organization": "Sapiens-Digital01",
     "selectedUsernames": [
