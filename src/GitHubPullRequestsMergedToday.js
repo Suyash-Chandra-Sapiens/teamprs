@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
+
 const GitHubPullRequestsMergedToday = (props) => {
   const [pullRequests, setPullRequests] = useState({});
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(localStorage.getItem('githubAccessToken') || '');
   const [inputToken, setInputToken] = useState(accessToken || '');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // New state for selected date
   const [allRequestsComplete, setAllRequestsComplete] = useState(false);
-  const [error, setError] = useState(null);
-  const [inputDisplayToken, setInputDisplayToken] = useState(accessToken.replace(/./g, '*')); // New state for display token
+  const [error, setError] = useState(null); // Add error state
 
   const organization = props.organization;
   const repoNames = props.repoNames;
@@ -18,6 +17,7 @@ const GitHubPullRequestsMergedToday = (props) => {
   const fetchData = async () => {
     try {
       const prData = {};
+      const today = new Date().toISOString().split('T')[0];
       
       for (const repoName of repoNames) {
         const response = await axios.get(`https://api.github.com/repos/${organization}/${repoName}/pulls`, {
@@ -35,59 +35,57 @@ const GitHubPullRequestsMergedToday = (props) => {
 
         const filteredPRs = response.data.filter((pr) => 
           selectedUsernames.includes(pr.user.login) &&
-          pr.merged_at && pr.merged_at.split('T')[0] === selectedDate
+          pr.merged_at && pr.merged_at.split('T')[0] === today
         );
         prData[repoName] = filteredPRs;
       }
       setPullRequests(prData);
       setLoading(false);
       setAllRequestsComplete(true);
-      setError(null);
+      setError(null); // Reset error state on success
     } catch (error) {
       console.error('Error:', error);
       setPullRequests({});
       setLoading(true);
       setAllRequestsComplete(true);
-      setError(error.message);
+      setError(error.message); // Handle invalid token error here, e.g., display an error message to the user
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, [accessToken, selectedDate]); // Adding selectedDate as a dependency
+  }, [accessToken]);
 
   const handleInputChange = (e) => {
     setInputToken(e.target.value);
-    setInputDisplayToken(e.target.value.replace(/./g, '*'));
-  };
-
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
   };
 
   const handleSubmit = () => {
     setAccessToken(inputToken);
     localStorage.setItem('githubAccessToken', inputToken);
-    fetchData();
+    setInputToken(inputToken);
   };
 
   const handleRefresh = () => {
     fetchData();
+    setInputToken(accessToken);
   };
 
   return (
     <Container>
-      <Title>Portal Team - P&C Github Open Pull Requests Merged On Selected Date</Title>
+      <Title>Portal Team - P&C Github Open Pull Requests Merged Today</Title>
       <InputContainer>
         <InputLabel>Enter GitHub Access Token:</InputLabel>
-        <Input type="text" value={inputDisplayToken} onChange={handleInputChange} />
-        <InputLabel>Select Date:</InputLabel>
-        <Input type="date" value={selectedDate} onChange={handleDateChange} />
+        <Input
+          type="text"
+          value={inputToken}
+          onChange={handleInputChange}
+        />
+        <SubmitButton onClick={handleSubmit}>Submit</SubmitButton>
+        <RefreshButton onClick={handleRefresh}>Refresh</RefreshButton>
       </InputContainer>
-      <div><SubmitButton onClick={handleSubmit}>Load/Save Token</SubmitButton>
-        <RefreshButton onClick={handleRefresh}>Refresh</RefreshButton></div>
-      {error ? (
-        <ErrorMessage>{error}</ErrorMessage>
+      {error ? (        
+      <ErrorMessage>Please Provide Valid Access Token</ErrorMessage>
       ) : loading && !allRequestsComplete ? (
         <LoadingMessage>Loading...</LoadingMessage>
       ) : (
@@ -98,7 +96,11 @@ const GitHubPullRequestsMergedToday = (props) => {
               <PullRequestList>
                 {pullRequests[repoName].map((pr) => (
                   <PullRequestItem key={pr.id}>
-                    <PullRequestLink href={pr.html_url} target="_blank" rel="noopener noreferrer">
+                    <PullRequestLink
+                      href={pr.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       PR #{pr.number} by {pr.user.login}: {pr.title}
                     </PullRequestLink>
                   </PullRequestItem>
@@ -111,6 +113,7 @@ const GitHubPullRequestsMergedToday = (props) => {
     </Container>
   );
 };
+
 
 export default GitHubPullRequestsMergedToday;
 
@@ -152,8 +155,7 @@ const Title = styled.h1`
 
 const InputContainer = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: left;
+  align-items: center;
   gap: 10px;
   margin-bottom: 20px;
 `;
